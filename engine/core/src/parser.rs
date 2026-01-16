@@ -43,6 +43,7 @@ pub fn parse_csv(data: &[u8]) -> Result<RawTable, EngineError> {
                         .map_err(|_| EngineError::Utf8Error)?
                         .trim()
                         .to_string();
+
                     if s.is_empty() {
                         Ok(None)
                     } else {
