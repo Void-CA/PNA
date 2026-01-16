@@ -15,7 +15,7 @@ pub struct StudentResult {
     pub status: AcademicStatus,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, PartialEq)]
 pub enum AcademicStatus {
     Approved,
     AtRisk,
