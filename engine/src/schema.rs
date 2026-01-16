@@ -2,14 +2,14 @@
 
 #[derive(Debug, Clone)]
 pub struct Schema {
-    pub alumno_id: String,
-    pub alumno_nombre: String,
-    pub evaluaciones: Vec<EvaluacionSchema>,
+    pub student_id: String,
+    pub student_name: String,
+    pub evaluations: Vec<EvaluationSchema>,
 }
 
 #[derive(Debug, Clone)]
-pub struct EvaluacionSchema {
-    pub columna: String,
+pub struct EvaluationSchema {
+    pub column: String,
     pub id: String,
-    pub peso: f32,
+    pub weight: f32,
 }

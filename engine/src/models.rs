@@ -3,21 +3,21 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Alumno {
+pub struct Student {
     pub id: String,
-    pub nombre: String,
+    pub name: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Evaluacion {
+pub struct Evaluation {
     pub id: String,
-    pub nombre: String,
-    pub peso: f32, // 0.0 – 1.0
+    pub name: String,
+    pub weight: f32, // 0.0 – 1.0
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Nota {
-    pub alumno_id: String,
-    pub evaluacion_id: String,
-    pub valor: f32, // 0 – 100 o 0 – 10 (normalizado luego)
+pub struct Grade {
+    pub student_id: String,
+    pub evaluation_id: String,
+    pub value: f32, // 0 – 100 or 0 – 10 (normalized later)
 }
