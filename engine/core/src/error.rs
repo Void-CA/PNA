@@ -1,6 +1,7 @@
 #[derive(Debug)]
 pub enum EngineError {
-    ParseError(String),
-    SchemaError(String),
-    RulesError(String),
+    Utf8Error,
+    EmptyInput,
+    InconsistentColumns,
+    CsvParseError(String),
 }

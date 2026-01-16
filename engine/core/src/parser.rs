@@ -1,8 +1,7 @@
-use crate::{error::EngineError, models::{Grade, Student}, schema::Schema};
+use crate::{error::EngineError, models::raw::RawTable};
 
-// pub fn parse_csv(
-//     data: &[u8],
-//     schema: &Schema,
-// ) -> Result<(Vec<Student>, Vec<Grade>), EngineError> {
-//     // implementación después
-// }
+pub fn parse_csv(
+    data: &[u8],
+) -> Result<RawTable, EngineError> {
+    // implementación después
+}
