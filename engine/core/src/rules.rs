@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone)]
 pub struct Rules {
@@ -15,7 +15,7 @@ pub struct StudentResult {
     pub status: AcademicStatus,
 }
 
-#[derive(Debug, Clone, Serialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum AcademicStatus {
     Approved,
     AtRisk,

@@ -1,6 +1,11 @@
 pub mod api {
-    pub use crate::parse::parse_csv;
+    pub use crate::parser::parse_csv;
     pub use crate::models::raw::RawTable;
-    pub use crate::models::grade::GradeTable;
-    pub use crate::models::enums::AcademicStatus;
+    pub use crate::models::gradebook::GradeTable;
+    pub use crate::rules::AcademicStatus;
 }
+
+pub mod error;
+pub mod parser;
+pub mod models;
+pub mod rules;

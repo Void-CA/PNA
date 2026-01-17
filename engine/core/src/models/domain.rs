@@ -1,3 +1,7 @@
+use serde::{Deserialize, Serialize};
+
+use crate::api::AcademicStatus;
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct StudentSummary {
     pub id : String,
