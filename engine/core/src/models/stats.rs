@@ -82,6 +82,61 @@ impl<'a> GradeStats<'a> {
         }).collect()
     }
 
+    pub fn class_summary(&self) -> ClassSummary {
+        let mut count = 0;
+        let mut mean = 0.0;
+        let mut m2 = 0.0;
+
+        let mut approved_count = 0;
+        let mut at_risk_count = 0;
+        let mut failed_count = 0;
+
+        for (i, avg_opt) in self.student_averages.iter().enumerate() {
+            let avg = match avg_opt {
+                Some(v) => *v,
+                None => continue,
+            };
+
+            count += 1;
+
+            // Welford
+            let delta = avg - mean;
+            mean += delta / count as f32;
+            let delta2 = avg - mean;
+            m2 += delta * delta2;
+
+            match self.academic_status(i) {
+                AcademicStatus::Approved => approved_count += 1,
+                AcademicStatus::AtRisk => at_risk_count += 1,
+                AcademicStatus::Failed => failed_count += 1,
+            }
+        }
+
+        let overall_average = if count > 0 { Some(mean) } else { None };
+        let overall_std_dev = if count > 1 {
+            Some((m2 / (count as f32 - 1.0)).sqrt())
+        } else {
+            None
+        };
+
+        ClassSummary {
+            student_count: self.table.student_count(),
+            overall_average,
+            overall_std_dev,
+            approved_count,
+            at_risk_count,
+            failed_count,
+        }
+    
+    }
+
+    pub fn summary(&self) -> GradebookSummary {
+        GradebookSummary {
+            students: self.student_summaries(),
+            evaluations: self.evaluation_summaries(),
+            class: self.class_summary(),
+        }
+    }
 }
 
 fn compute_student_averages(table: &GradeTable) -> Vec<Option<f32>> {
@@ -102,7 +157,7 @@ fn compute_student_averages(table: &GradeTable) -> Vec<Option<f32>> {
 
 fn compute_student_std(table: &GradeTable, avgs: &[Option<f32>]) -> Vec<Option<f32>> {
     table.scores.iter().enumerate().map(|(student_idx, scores)| {
-        match avgs[student_idx] {
+        match avgs.get(student_idx).copied().flatten() {
             Some(avg) => {
                 let mut sum_sq_diff = 0.0;
                 let mut count = 0;
@@ -169,7 +224,7 @@ fn compute_evaluation_averages(table: &GradeTable) -> Vec<Option<f32>> {
 
 fn compute_evaluation_std(table: &GradeTable, avgs: &[Option<f32>]) -> Vec<Option<f32>> {
     table.evaluations.iter().enumerate().map(|(eval_idx, _)| {
-        match avgs[eval_idx] {
+        match avgs.get(eval_idx).copied().flatten() {
             Some(avg) => {
                 let mut sum_sq_diff = 0.0;
                 let mut count = 0;
@@ -183,7 +238,7 @@ fn compute_evaluation_std(table: &GradeTable, avgs: &[Option<f32>]) -> Vec<Optio
                 }
 
                 if count <= 1 {
-                    Some(0.0)
+                    None
                 } else {
                     Some((sum_sq_diff / (count as f32 - 1.0)).sqrt())
                 }
@@ -192,3 +247,4 @@ fn compute_evaluation_std(table: &GradeTable, avgs: &[Option<f32>]) -> Vec<Optio
         }
     }).collect()
 }
+
