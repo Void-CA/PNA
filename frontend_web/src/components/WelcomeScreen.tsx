@@ -14,8 +14,8 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ ready, loading, onFile })
         <GraduationCap size={32} />
       </div>
       <div>
-        <h1 className="text-3xl font-black text-slate-800">GradeAnalytics</h1>
-        <p className="text-slate-500 mt-2 text-lg">Análisis estadístico académico procesado localmente con Rust.</p>
+        <h1 className="text-3xl font-black text-slate-800">Procesador de Notas</h1>
+        <p className="text-slate-500 mt-2 text-lg">Análisis estadístico académico procesado localmente.</p>
       </div>
 
       {!ready ? (
