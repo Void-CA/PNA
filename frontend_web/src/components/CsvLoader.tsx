@@ -4,7 +4,7 @@ import { initEngine, createEngine } from "../services/engine";
 
 function CsvLoader() {
   const [ready, setReady] = useState(false);
-  const [engine, setEngine] = useState<any>(null);
+
   const [data, setData] = useState<any>(null);
   const [summaries, setSummaries] = useState<any>(null);
 
@@ -23,7 +23,7 @@ function CsvLoader() {
     const bytes = new Uint8Array(await file.arrayBuffer());
     const ge = createEngine(bytes);
 
-    setEngine(ge);
+
     setData(ge.get_table());
     setSummaries(ge.get_summary());
   };
