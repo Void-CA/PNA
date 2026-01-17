@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{error::EngineError, models::raw::RawTable, rules::AcademicStatus};
+use crate::{error::EngineError, models::raw::RawTable};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GradeTable {

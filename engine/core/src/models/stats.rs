@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use crate::models::domain::{ClassSummary, EvaluationSummary, GradebookSummary, StudentSummary};
 use crate::models::gradebook::GradeTable;
 use crate::rules::AcademicStatus;
@@ -12,6 +14,27 @@ pub struct GradeStats<'a> {
     evaluation_averages: Vec<Option<f32>>,
     evaluation_std: Vec<Option<f32>>,
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct GradeStatsOwned {
+    pub students: Vec<StudentSummary>,
+    pub evaluations: Vec<EvaluationSummary>,
+    pub class: ClassSummary,
+}
+
+
+impl From<&GradeTable> for GradeStatsOwned {
+    fn from(table: &GradeTable) -> Self {
+        let grades_stats = GradeStats::new(table);
+        Self {
+            students: grades_stats.student_summaries(),
+            evaluations: grades_stats.evaluation_summaries(),
+            class: grades_stats.class_summary(),
+        }
+    }
+}
+
+
 
 impl<'a> GradeStats<'a> {
     pub fn new(table: &'a GradeTable) -> Self {
@@ -653,7 +676,7 @@ mod tests {
         
         for student in 0..1000 {
             csv_data.push_str(&format!("Student{}", student));
-            for exam in 0..10 {
+            for _exam in 0..10 {
                 let score = (student % 101) as f32; // Scores de 0 a 100
                 csv_data.push_str(&format!(",{}", score));
             }
