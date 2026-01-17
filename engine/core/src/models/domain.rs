@@ -1,15 +1,45 @@
-pub struct Evaluation {
-    pub id: String,
+#[derive(Serialize, Deserialize, Debug)]
+pub struct StudentSummary {
+    pub id : String,
     pub name: String,
-    pub weight: Option<f32>,
+    pub average: Option<f32>,
+    pub percentile: Option<f32>,
+    pub std_dev: Option<f32>,
+    pub status: AcademicStatus,
 }
 
-pub struct Grade {
-    pub student_id: String,
-    pub evaluation_id: String,
-    pub value: Option<f32>,
-}
-pub struct Student {
+#[derive(Serialize, Deserialize, Debug)]
+pub struct EvaluationSummary {
     pub id: String,
     pub name: String,
+
+    pub average: Option<f32>,
+    pub std_dev: Option<f32>,
+
+    pub highest_score: Option<f32>,
+    pub lowest_score: Option<f32>,
+
+    pub evaluated_count: usize,
+    pub missing_count: usize,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ClassSummary {
+    pub student_count: usize,
+
+    pub overall_average: Option<f32>,
+    pub overall_std_dev: Option<f32>,
+
+    pub approved_count: usize,
+    pub at_risk_count: usize,
+    pub failed_count: usize,
+}
+
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GradebookSummary {
+    pub students: Vec<StudentSummary>,
+    pub evaluations: Vec<EvaluationSummary>,
+    pub class: ClassSummary,
+}
+
