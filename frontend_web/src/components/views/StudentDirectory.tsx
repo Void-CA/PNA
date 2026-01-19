@@ -82,10 +82,14 @@ export function StudentDirectory({ data }: StudentDirectoryProps) {
                                 <TableCell className="font-mono text-xs text-slate-500">{student.id}</TableCell>
                                 <TableCell className="font-medium">{student.name}</TableCell>
                                 <TableCell>{student.average.toFixed(2)}</TableCell>
-                                <TableCell>{student.percentile}%</TableCell>
+                                <TableCell>{student.percentile.toFixed(2)}%</TableCell>
                                 <TableCell className="text-right">
-                                    <Badge variant={student.status === 'Approved' ? 'success' : 'destructive'}>
-                                        {student.status === 'Approved' ? 'Aprobado' : 'Fallido'}
+                                    <Badge variant={
+                                        student.status === 'Approved' ? 'success' :
+                                            student.status === 'AtRisk' ? 'warning' : 'destructive'
+                                    }>
+                                        {student.status === 'Approved' ? 'Aprobado' :
+                                            student.status === 'AtRisk' ? 'En Riesgo' : 'Fallido'}
                                     </Badge>
                                 </TableCell>
                             </TableRow>

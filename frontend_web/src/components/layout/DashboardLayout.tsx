@@ -30,6 +30,12 @@ export function DashboardLayout({
     onFileChange
 }: DashboardLayoutProps) {
 
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+    const handleUploadClick = () => {
+        fileInputRef.current?.click();
+    };
+
     const NavContent = () => (
         <div className="flex flex-col h-full py-4">
             <div className="px-6 mb-8 flex items-center gap-3">
@@ -57,12 +63,20 @@ export function DashboardLayout({
             </div>
 
             <div className="mt-auto px-6 pt-6 border-t border-slate-100">
-                <label className="block w-full">
-                    <div className="flex items-center justify-center w-full px-4 py-3 bg-indigo-600 text-white rounded-xl cursor-pointer hover:bg-indigo-700 transition font-medium shadow-lg shadow-indigo-200">
+                <div className="w-full">
+                    <Button
+                        onClick={handleUploadClick}
+                        className="w-full h-auto py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-200 transition-all font-medium flex items-center justify-center gap-2"
+                    >
                         Cargar Nuevo CSV
-                    </div>
-                    <input type="file" className="hidden" accept=".csv" onChange={onFileChange} />
-                </label>
+                    </Button>
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        className="hidden"
+                        onChange={onFileChange}
+                    />
+                </div>
             </div>
         </div>
     );

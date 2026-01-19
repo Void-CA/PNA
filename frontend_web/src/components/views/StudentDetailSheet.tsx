@@ -52,10 +52,14 @@ export function StudentDetailSheet({
                                 </SheetDescription>
                             </div>
                             <Badge
-                                variant={student.status === 'Approved' ? 'success' : 'warning'}
+                                variant={
+                                    student.status === 'Approved' ? 'success' :
+                                        student.status === 'AtRisk' ? 'warning' : 'destructive'
+                                }
                                 className="px-3 py-1 text-xs uppercase tracking-wide"
                             >
-                                {student.status === 'Approved' ? 'Aprobado' : 'En Riesgo'}
+                                {student.status === 'Approved' ? 'Aprobado' :
+                                    student.status === 'AtRisk' ? 'En Riesgo' : 'Fallido'}
                             </Badge>
                         </div>
                     </SheetHeader>
@@ -79,7 +83,7 @@ export function StudentDetailSheet({
                                     <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
                                         <Award size={14} /> Percentil
                                     </span>
-                                    <span className="text-3xl font-black text-slate-700">{student.percentile}%</span>
+                                    <span className="text-3xl font-black text-slate-700">{student.percentile.toFixed(2)}%</span>
                                 </CardContent>
                             </Card>
                         </div>
