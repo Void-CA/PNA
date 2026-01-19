@@ -1,5 +1,5 @@
 // services/engine.ts
-import init, { GradeEngine } from "../../pkg/pkg.js";
+import init, { GradeEngine } from "../../pkg/pna_wasm.js";
 
 let ready = false;
 

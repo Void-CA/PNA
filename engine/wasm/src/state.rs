@@ -1,9 +1,9 @@
-use pna_core::{api::{GradeStatsOwned, GradeTable, parse_csv}};
+use pna_core::{api::{GradeStatsOwned, AcademicTable, parse_excel}};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub struct GradeEngine {
-    table: GradeTable,
+    table: AcademicTable,
     stats: GradeStatsOwned,
 }
 
@@ -11,10 +11,10 @@ pub struct GradeEngine {
 impl GradeEngine {
     #[wasm_bindgen(constructor)]
     pub fn new(csv_data: &[u8]) -> Result<GradeEngine, JsValue> {
-        let raw = parse_csv(csv_data)
+        let raw = parse_excel(csv_data)
             .map_err(|e| JsValue::from_str(&e.to_string()))?;
 
-        let table = GradeTable::try_from(raw)
+        let table = AcademicTable::try_from(raw)
             .map_err(|e| JsValue::from_str(&e.to_string()))?;
 
         let stats = GradeStatsOwned::from(&table);

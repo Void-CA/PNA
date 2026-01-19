@@ -34,11 +34,22 @@ impl TryFrom<RawTable> for AcademicTable {
     fn try_from(raw: RawTable) -> Result<Self, Self::Error> {
         // Ajustamos para que empiece en el índice 4 (Prueba 1 en tu test)
         // y tome todo hasta antes del último (NP)
-        let eval_headers = if raw.headers.len() > 5 {
-            raw.headers[4..raw.headers.len()-1].to_vec()
-        } else {
-            Vec::new()
-        };
+        // Identify valid indices (columns to keep) based on headers
+        // We look at headers from index 4 up to len-1 (excluding NP)
+        // Row data for these headers is at header_index + 1
+        let mut valid_indices = Vec::new();
+        let mut eval_headers = Vec::new();
+
+        if raw.headers.len() > 5 {
+            for (i, header) in raw.headers.iter().enumerate().take(raw.headers.len() - 1).skip(4) {
+                let h_upper = header.trim().to_uppercase();
+                // Filter out summary columns
+                if !h_upper.starts_with("ACU[") && !h_upper.starts_with("CEC[") && !h_upper.starts_with("EXA[") {
+                    valid_indices.push(i);
+                    eval_headers.push(header.clone());
+                }
+            }
+        }
 
         let mut records = Vec::new();
 
@@ -52,12 +63,17 @@ impl TryFrom<RawTable> for AcademicTable {
             let email = row[3].clone().unwrap_or_default();
             let group = row[4].clone().unwrap_or_default();
 
-            // Las notas también deben empezar en el índice 5 para alinearse con los headers
-            // obtenidos arriba (índices 4 y 5 del row original)
-            let grades: Vec<GradeValue> = row[5..row.len()-1]
-                .iter()
-                .map(parse_cell)
-                .collect();
+            let mut grades = Vec::new();
+            for &idx in &valid_indices {
+                // Row data is shifted by +1 relative to header index
+                // (Header 4 -> Row 5)
+                let cell = if idx + 1 < row.len() {
+                    &row[idx + 1]
+                } else {
+                    &None
+                };
+                grades.push(parse_cell(cell));
+            }
 
             let final_grade = parse_cell(row.last().unwrap_or(&None));
 
@@ -199,5 +215,40 @@ mod tests {
         assert_eq!(parse_cell(&Some("np".to_string())), GradeValue::Absent);
         assert_eq!(parse_cell(&Some("85.5".to_string())), GradeValue::Numeric(85.5));
         assert_eq!(parse_cell(&None), GradeValue::Absent);
+    }
+
+
+    #[test]
+    fn test_summary_filtering() {
+        let headers = vec![
+            "#".to_string(), "CARNET".to_string(), "Alumno".to_string(), "Correo".to_string(),
+            "Prueba 1".to_string(),
+            "ACU[60%]".to_string(), // Should be filtered
+            "CEC[10%]".to_string(), // Should be filtered
+            "EXA[30%]".to_string(), // Should be filtered
+            "NP".to_string(),
+        ];
+
+        let rows = vec![
+            vec![
+                Some("1".to_string()), Some("C1".to_string()), Some("N1".to_string()), Some("E1".to_string()), Some("G1".to_string()),
+                Some("10".to_string()), // Prueba 1
+                Some("60".to_string()), // ACU
+                Some("10".to_string()), // CEC
+                Some("30".to_string()), // EXA
+                Some("100".to_string()) // NP
+            ]
+        ];
+
+        let raw = RawTable { headers, rows };
+        let result = AcademicTable::try_from(raw).expect("Conversion Success");
+
+        assert_eq!(result.evaluations.len(), 1);
+        assert_eq!(result.evaluations[0], "Prueba 1");
+        
+        let s = &result.records[0];
+        // Only 1 grade should be remaining
+        assert_eq!(s.grades.len(), 1);
+        assert_eq!(s.grades[0], GradeValue::Numeric(10.0));
     }
 }

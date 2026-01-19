@@ -47,6 +47,9 @@ export function useGradeData() {
                 students: students.filter((s: any) => s.average >= r.min && s.average < r.max)
             }));
 
+            console.log("Distributions:", distributions);
+            console.log("Summary:", summary);
+            console.log("Table:", table);
             setData({
                 summary,
                 table,
