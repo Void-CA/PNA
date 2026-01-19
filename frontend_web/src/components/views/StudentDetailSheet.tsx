@@ -136,8 +136,8 @@ export function StudentDetailSheet({
                                         <div className="divide-y divide-slate-100">
                                             {chartData.map((item: any) => (
                                                 <div key={item.exam} className="flex justify-between items-center p-4 hover:bg-slate-50 transition">
-                                                    <span className="font-medium text-slate-700">{item.exam}</span>
-                                                    <div className="flex items-center gap-4">
+                                                    <span className="font-medium text-slate-700 truncate max-w-[200px]" title={item.exam}>{item.exam}</span>
+                                                    <div className="flex items-center gap-4 shrink-0">
                                                         <span className="text-xs text-slate-400">Avg: {item.classAverage}</span>
                                                         <Badge variant={(item.maxScore > 0 ? (item.score / item.maxScore * 100) : 0) >= 60 ? 'secondary' : 'destructive'}>
                                                             {item.score} <span className="text-[10px] opacity-70">/ {item.maxScore}</span>

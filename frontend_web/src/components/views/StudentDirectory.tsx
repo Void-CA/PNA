@@ -4,7 +4,7 @@ import {
 } from '../ui/table';
 
 import { Badge } from '../ui/badge';
-import { Search } from 'lucide-react';
+import { Search, ArrowUpDown } from 'lucide-react';
 
 import type { ExtendedAnalysis, Student } from '../../hooks/useGradeData';
 import { StudentDetailSheet } from './StudentDetailSheet';
@@ -16,14 +16,45 @@ interface StudentDirectoryProps {
 export function StudentDirectory({ data }: StudentDirectoryProps) {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+    const [sortConfig, setSortConfig] = useState<{ key: keyof Student | 'status', direction: 'asc' | 'desc' }>({ key: 'accumulated_score', direction: 'desc' });
 
     // Debug check to verify new code is running
     // console.log("StudentDirectory v1.0.1 loaded (findIndex patch)");
 
-    const students = data.summary.students.filter((s: Student) =>
+    const filteredStudents = data.summary.students.filter((s: Student) =>
         s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         s.id.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    // Sort students based on current sort config
+    const students = [...filteredStudents].sort((a, b) => {
+        const { key, direction } = sortConfig;
+        let valA: any = a[key as keyof Student];
+        let valB: any = b[key as keyof Student];
+
+        // Handle undefined values
+        if (valA === undefined) valA = 0;
+        if (valB === undefined) valB = 0;
+
+        // String comparison for text fields
+        if (typeof valA === 'string' && typeof valB === 'string') {
+            return direction === 'asc'
+                ? valA.localeCompare(valB)
+                : valB.localeCompare(valA);
+        }
+
+        // Numeric comparison
+        if (valA < valB) return direction === 'asc' ? -1 : 1;
+        if (valA > valB) return direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    const handleSort = (key: keyof Student | 'status') => {
+        setSortConfig(current => ({
+            key,
+            direction: current.key === key && current.direction === 'desc' ? 'asc' : 'desc'
+        }));
+    };
 
     // Helper to find row
     const getStudentRow = (student: Student | null) => {
@@ -85,11 +116,31 @@ export function StudentDirectory({ data }: StudentDirectoryProps) {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[100px]">ID</TableHead>
-                            <TableHead>Nombre</TableHead>
-                            <TableHead>Puntaje</TableHead>
-                            <TableHead>Percentil</TableHead>
-                            <TableHead className="text-right">Estado</TableHead>
+                            <TableHead className="w-[100px] cursor-pointer hover:bg-slate-50" onClick={() => handleSort('id')}>
+                                <div className="flex items-center gap-1">
+                                    ID <ArrowUpDown size={12} />
+                                </div>
+                            </TableHead>
+                            <TableHead className="cursor-pointer hover:bg-slate-50" onClick={() => handleSort('name')}>
+                                <div className="flex items-center gap-1">
+                                    Nombre <ArrowUpDown size={12} />
+                                </div>
+                            </TableHead>
+                            <TableHead className="cursor-pointer hover:bg-slate-50" onClick={() => handleSort('accumulated_score')}>
+                                <div className="flex items-center gap-1">
+                                    Puntaje <ArrowUpDown size={12} />
+                                </div>
+                            </TableHead>
+                            <TableHead className="cursor-pointer hover:bg-slate-50" onClick={() => handleSort('percentile')}>
+                                <div className="flex items-center gap-1">
+                                    Percentil <ArrowUpDown size={12} />
+                                </div>
+                            </TableHead>
+                            <TableHead className="text-right cursor-pointer hover:bg-slate-50" onClick={() => handleSort('status')}>
+                                <div className="flex items-center gap-1 justify-end">
+                                    Estado <ArrowUpDown size={12} />
+                                </div>
+                            </TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>

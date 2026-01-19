@@ -115,7 +115,7 @@ export function EvaluationDetailSheet({
                 <ScrollArea className="flex-1">
                     <div className="p-6 space-y-8">
                         {/* Stats Cards */}
-                        <div className="grid grid-cols-3 gap-4">
+                        <div className="grid grid-cols-4 gap-4">
                             <Card>
                                 <CardContent className="p-4 pt-5 text-center">
                                     <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Promedio</div>
@@ -126,6 +126,12 @@ export function EvaluationDetailSheet({
                                 <CardContent className="p-4 pt-5 text-center">
                                     <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Desv. Est.</div>
                                     <div className="text-2xl font-black text-slate-700">{evaluation.std_dev?.toFixed(2)}</div>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardContent className="p-4 pt-5 text-center">
+                                    <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Max Posible</div>
+                                    <div className="text-2xl font-black text-indigo-600">{evaluation.max_possible_score || evaluation.highest_score}</div>
                                 </CardContent>
                             </Card>
                             <Card>
