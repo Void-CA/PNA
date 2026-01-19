@@ -9,12 +9,14 @@ import { Card, CardContent } from '../ui/card';
 import { TrendingUp, Award, AlertCircle } from 'lucide-react';
 import StudentEvolutionChart from '../charts/StudentEvolutionChart';
 
+import type { Student, Evaluation } from '../../hooks/useGradeData';
+
 interface StudentSheetProps {
-    student: any | null;
+    student: Student | null;
     studentRow: any | null;
     isOpen: boolean;
     onClose: () => void;
-    allEvaluations: any[];
+    allEvaluations: Evaluation[];
 }
 
 export function StudentDetailSheet({
@@ -30,11 +32,21 @@ export function StudentDetailSheet({
         if (!studentRow || !allEvaluations) return [];
         return allEvaluations.map(ev => {
             const scoreVal = studentRow[ev.name];
-            const score = scoreVal ? parseFloat(scoreVal) : 0;
+            // Handle number or string input safely. 
+            // If scoreVal is basically undefined/null, default to 0.
+            let score = 0;
+            if (typeof scoreVal === 'number') {
+                score = scoreVal;
+            } else if (typeof scoreVal === 'string') {
+                const parsed = parseFloat(scoreVal);
+                score = isNaN(parsed) ? 0 : parsed;
+            }
+
             return {
                 exam: ev.name,
-                score: isNaN(score) ? 0 : score,
-                classAverage: ev.average
+                score: score,
+                classAverage: ev.average,
+                maxScore: ev.max_possible_score || 100
             };
         });
     }, [student, studentRow, allEvaluations]);
@@ -73,9 +85,9 @@ export function StudentDetailSheet({
                             <Card>
                                 <CardContent className="p-4 flex flex-col gap-2">
                                     <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                                        <TrendingUp size={14} /> Promedio
+                                        <TrendingUp size={14} /> Puntaje
                                     </span>
-                                    <span className="text-3xl font-black text-slate-900">{student.average.toFixed(2)}</span>
+                                    <span className="text-3xl font-black text-slate-900">{student.accumulated_score.toFixed(2)}</span>
                                 </CardContent>
                             </Card>
                             <Card>
@@ -110,7 +122,7 @@ export function StudentDetailSheet({
                                 </Card>
 
                                 {/* Auto-generated Insight */}
-                                {student.average < 60 && (
+                                {student.accumulated_score < 60 && (
                                     <div className="bg-rose-50 border border-rose-100 rounded-lg p-4 flex gap-3 text-sm text-rose-800">
                                         <AlertCircle className="shrink-0" size={20} />
                                         <p>Este estudiante tiene un rendimiento inferior al crítico. Se recomienda intervención académica inmediata.</p>
@@ -127,8 +139,8 @@ export function StudentDetailSheet({
                                                     <span className="font-medium text-slate-700">{item.exam}</span>
                                                     <div className="flex items-center gap-4">
                                                         <span className="text-xs text-slate-400">Avg: {item.classAverage}</span>
-                                                        <Badge variant={item.score >= 60 ? 'secondary' : 'destructive'}>
-                                                            {item.score}
+                                                        <Badge variant={(item.maxScore > 0 ? (item.score / item.maxScore * 100) : 0) >= 60 ? 'secondary' : 'destructive'}>
+                                                            {item.score} <span className="text-[10px] opacity-70">/ {item.maxScore}</span>
                                                         </Badge>
                                                     </div>
                                                 </div>

@@ -5,7 +5,8 @@ import {
 
 import { Badge } from '../ui/badge';
 import { Search } from 'lucide-react';
-import type { ExtendedAnalysis } from '../../hooks/useGradeData';
+
+import type { ExtendedAnalysis, Student } from '../../hooks/useGradeData';
 import { StudentDetailSheet } from './StudentDetailSheet';
 
 interface StudentDirectoryProps {
@@ -14,35 +15,54 @@ interface StudentDirectoryProps {
 
 export function StudentDirectory({ data }: StudentDirectoryProps) {
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedStudent, setSelectedStudent] = useState<any>(null);
+    const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
-    const students = data.summary.students.filter((s: any) =>
+    // Debug check to verify new code is running
+    // console.log("StudentDirectory v1.0.1 loaded (findIndex patch)");
+
+    const students = data.summary.students.filter((s: Student) =>
         s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         s.id.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     // Helper to find row
-    const getStudentRow = (student: any) => {
-        if (!student || !data.table) return null;
-        // Assume Header 0 is the key for student name?? 
-        // Wait, the engine returns `get_table()` with { students: string[], evaluations: string[], scores: number[][] }
+    const getStudentRow = (student: Student | null) => {
+        if (!student || !data.table || !data.table.records) {
+            // console.log("getStudentRow abort: missing data", { student: !!student, table: !!data.table });
+            return null;
+        }
 
-        // Correction: engine.ts docs say:
-        // { students: string[], evaluations: string[], scores: (number|null)[][] }
-        // This is NOT an object per row. It's a matrix!
-        // I need to adapt the `studentRow` logic significantly here and in the Sheet.
+        // Find the record matching the student ID (carnet)
+        const record = data.table.records.find((r: any) => r.carnet === student.id);
 
-        // Find index of student
-        const index = data.table.students.indexOf(student.name);
-        if (index === -1) return null;
+        if (!record) {
+            console.log("getStudentRow: Record not found for", student.id);
+            return null;
+        }
 
-        // Construct a "row" object for compatibility with the Sheet logic or update Sheet logic
-        // Let's construct: { "Exam 1": score, "Exam 2": score }
         const rowObj: any = {};
-        data.table.evaluations.forEach((evalName: string, evalIndex: number) => {
-            const score = data.table.scores[index][evalIndex];
-            rowObj[evalName] = score;
+        const evalNames = data.table.evaluations || [];
+
+        evalNames.forEach((evalName: string, index: number) => {
+            if (record.grades && record.grades[index]) {
+                const gradeEntry = record.grades[index];
+                // gradeEntry follows { status: 'Numeric'|'Fraction'|..., value: ... } structure from Rust
+
+                let scoreVal = 0;
+
+                if (gradeEntry.status === 'Numeric') {
+                    scoreVal = gradeEntry.value;
+                } else if (gradeEntry.status === 'Fraction') {
+                    scoreVal = gradeEntry.value.obtained;
+                } else {
+                    // Absent, Withdrawn, Label -> Treat as 0 for chart
+                    scoreVal = 0;
+                }
+
+                rowObj[evalName] = scoreVal;
+            }
         });
+
         return rowObj;
     };
 
@@ -67,13 +87,13 @@ export function StudentDirectory({ data }: StudentDirectoryProps) {
                         <TableRow>
                             <TableHead className="w-[100px]">ID</TableHead>
                             <TableHead>Nombre</TableHead>
-                            <TableHead>Promedio</TableHead>
+                            <TableHead>Puntaje</TableHead>
                             <TableHead>Percentil</TableHead>
                             <TableHead className="text-right">Estado</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {students.map((student: any) => (
+                        {students.map((student: Student) => (
                             <TableRow
                                 key={student.id}
                                 className="cursor-pointer"
@@ -81,7 +101,7 @@ export function StudentDirectory({ data }: StudentDirectoryProps) {
                             >
                                 <TableCell className="font-mono text-xs text-slate-500">{student.id}</TableCell>
                                 <TableCell className="font-medium">{student.name}</TableCell>
-                                <TableCell>{student.average.toFixed(2)}</TableCell>
+                                <TableCell>{student.accumulated_score}</TableCell>
                                 <TableCell>{student.percentile.toFixed(2)}%</TableCell>
                                 <TableCell className="text-right">
                                     <Badge variant={

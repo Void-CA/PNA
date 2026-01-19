@@ -48,6 +48,9 @@ const App = () => {
       onFileChange={handleFile}
     >
       {renderView()}
+      <div className="fixed bottom-1 right-1 text-[10px] text-slate-300 pointer-events-none">
+        v1.0.1 - Fix Applied
+      </div>
     </DashboardLayout>
   );
 };

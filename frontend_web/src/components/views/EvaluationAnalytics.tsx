@@ -1,9 +1,14 @@
-
+import { useState, useMemo } from 'react';
 import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from '../ui/table';
-import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
-import type { ExtendedAnalysis } from '../../hooks/useGradeData';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
+import { Button } from '../ui/button';
+import { ArrowUpDown, Maximize2 } from 'lucide-react';
+
+import type { ExtendedAnalysis, Evaluation } from '../../hooks/useGradeData';
+import PerformanceBoxPlot from '../charts/PerformanceBoxPlot';
+import { EvaluationDetailSheet } from './EvaluationDetailSheet';
 
 interface EvaluationAnalyticsProps {
     data: ExtendedAnalysis;
@@ -11,68 +16,126 @@ interface EvaluationAnalyticsProps {
 
 export function EvaluationAnalytics({ data }: EvaluationAnalyticsProps) {
     const evaluations = data.summary.evaluations;
+    const [selectedEval, setSelectedEval] = useState<Evaluation | null>(null);
+    const [sortConfig, setSortConfig] = useState<{ key: keyof Evaluation, direction: 'asc' | 'desc' }>({ key: 'average', direction: 'desc' });
+
+    // Calculate global boxplot data for all evaluations
+    const boxPlotData = useMemo(() => {
+        if (!data.table.records) return [];
+        const plotData = evaluations.map(ev => {
+            const evalIndex = data.table.evaluations?.indexOf(ev.name);
+            if (evalIndex === undefined || evalIndex === -1) return null;
+
+            const scores: number[] = [];
+            data.table.records.forEach((r: any) => {
+                const g = r.grades[evalIndex];
+                let score = 0;
+                if (g && g.status === 'Numeric') score = g.value;
+                else if (g && g.status === 'Fraction') score = g.value.obtained;
+
+                if (score > 0) scores.push(score);
+            });
+
+            // Return the raw values array for Plotly to calculate box plot statistics
+            return {
+                name: ev.name,
+                values: scores
+            };
+        });
+
+        // Filter out null values with proper type narrowing
+        return plotData.filter((item): item is { name: string; values: number[] } => item !== null);
+    }, [evaluations, data]);
+
+    // Sorting logic
+    const sortedEvaluations = useMemo(() => {
+        const items = [...evaluations];
+        const { key, direction } = sortConfig;
+
+        items.sort((a, b: any) => {
+            let valA = a[key];
+            let valB = b[key];
+
+            // Handle special cases or defaults
+            if (valA === undefined) valA = 0;
+            if (valB === undefined) valB = 0;
+
+            if (valA < valB) return direction === 'asc' ? -1 : 1;
+            if (valA > valB) return direction === 'asc' ? 1 : -1;
+            return 0;
+        });
+        return items;
+    }, [evaluations, sortConfig]);
+
+    const handleSort = (key: keyof Evaluation) => {
+        setSortConfig(current => ({
+            key,
+            direction: current.key === key && current.direction === 'desc' ? 'asc' : 'desc'
+        }));
+    };
 
     return (
         <div className="space-y-6">
             <h2 className="text-2xl font-bold tracking-tight">Análisis de Evaluaciones</h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {evaluations.map((ev: any) => (
-                    <Card key={ev.id} className="hover:border-indigo-200 transition-colors">
-                        <CardHeader>
-                            <CardTitle className="text-lg">{ev.name}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="flex justify-between items-end mb-4">
-                                <span className="text-3xl font-black text-slate-800">{ev.average.toFixed(1)}</span>
-                                <span className="text-xs text-slate-400 font-medium mb-1">Promedio</span>
-                            </div>
-
-                            <div className="space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                    <span className="text-slate-500">Nota Máxima</span>
-                                    <span className="font-bold text-emerald-600">{ev.highest_score}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-slate-500">Nota Mínima</span>
-                                    <span className="font-bold text-rose-600">{ev.lowest_score}</span>
-                                </div>
-                                <div className="flex justify-between border-t border-slate-100 pt-2 mt-2">
-                                    <span className="text-slate-500">Desviación Estd.</span>
-                                    <span className="font-mono text-slate-700">{ev.std_dev?.toFixed(2) || '-'}</span>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
+            {/* Main Distribution Chart */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Rendimiento del Aula</CardTitle>
+                    <CardDescription>Comparativa de distribuciones por evaluación (Min, Q1, Mediana, Q3, Max)</CardDescription>
+                </CardHeader>
+                <CardContent className="h-96">
+                    <PerformanceBoxPlot data={boxPlotData} />
+                </CardContent>
+            </Card>
 
             <div className="rounded-md border border-slate-200 bg-white overflow-hidden shadow-sm mt-8">
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Evaluación</TableHead>
-                            <TableHead>Promedio</TableHead>
-                            <TableHead>Desv. Estándar</TableHead>
-                            <TableHead>Participación</TableHead>
-                            <TableHead className="text-right">Rango (Min - Max)</TableHead>
+                            <TableHead className="cursor-pointer hover:bg-slate-50" onClick={() => handleSort('name')}>
+                                Evaluación <ArrowUpDown className="ml-2 inline" size={12} />
+                            </TableHead>
+                            <TableHead className="cursor-pointer hover:bg-slate-50" onClick={() => handleSort('average')}>
+                                Promedio <ArrowUpDown className="ml-2 inline" size={12} />
+                            </TableHead>
+                            <TableHead className="cursor-pointer hover:bg-slate-50" onClick={() => handleSort('std_dev')}>
+                                Desv. Estándar <ArrowUpDown className="ml-2 inline" size={12} />
+                            </TableHead>
+                            <TableHead className="cursor-pointer hover:bg-slate-50" onClick={() => handleSort('highest_score')}>
+                                Max Posible / Logrado <ArrowUpDown className="ml-2 inline" size={12} />
+                            </TableHead>
+                            <TableHead className="text-right">Acciones</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {evaluations.map((ev: any) => (
-                            <TableRow key={ev.id}>
+                        {sortedEvaluations.map((ev: Evaluation) => (
+                            <TableRow key={ev.id} className="cursor-pointer hover:bg-slate-50" onClick={() => setSelectedEval(ev)}>
                                 <TableCell className="font-medium">{ev.name}</TableCell>
-                                <TableCell>{ev.average.toFixed(2)}</TableCell>
+                                <TableCell>
+                                    <div className="flex flex-col">
+                                        <span className="font-bold text-slate-700">{ev.average.toFixed(2)}</span>
+                                    </div>
+                                </TableCell>
                                 <TableCell className="font-mono text-slate-500">{ev.std_dev?.toFixed(2) || 'N/A'}</TableCell>
-                                <TableCell>{ev.evaluated_count} / {ev.evaluated_count + ev.missing_count}</TableCell>
-                                <TableCell className="text-right font-mono">
-                                    {ev.lowest_score} - {ev.highest_score}
+                                <TableCell>{ev.max_possible_score || '?'} / {ev.highest_score}</TableCell>
+                                <TableCell className="text-right">
+                                    <Button variant="ghost" size="sm" onClick={() => setSelectedEval(ev)}>
+                                        <Maximize2 size={16} />
+                                    </Button>
                                 </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
                 </Table>
             </div>
+
+            <EvaluationDetailSheet
+                evaluation={selectedEval}
+                data={data}
+                isOpen={!!selectedEval}
+                onClose={() => setSelectedEval(null)}
+            />
         </div>
     );
 }
