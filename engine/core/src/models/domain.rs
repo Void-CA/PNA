@@ -6,7 +6,7 @@ use crate::api::AcademicStatus;
 pub struct StudentSummary {
     pub id : String,
     pub name: String,
-    pub average: Option<f32>,
+    pub accumulated_score: Option<f32>,
     pub percentile: Option<f32>,
     pub std_dev: Option<f32>,
     pub status: AcademicStatus,
@@ -22,6 +22,7 @@ pub struct EvaluationSummary {
 
     pub highest_score: Option<f32>,
     pub lowest_score: Option<f32>,
+    pub max_possible_score: Option<f32>,
 
     pub evaluated_count: usize,
     pub missing_count: usize,
