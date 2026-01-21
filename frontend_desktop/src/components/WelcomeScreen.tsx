@@ -34,12 +34,12 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ ready, loading, onFile })
             ) : (
               <>
                 <FileUp size={40} className="text-indigo-500 mb-4 group-hover:scale-110 transition-transform" />
-                <span className="text-slate-700 font-bold text-lg">Sube tu archivo CSV</span>
+                <span className="text-slate-700 font-bold text-lg">Sube tu archivo</span>
                 <span className="text-slate-400 text-sm mt-1">Nombre, Exam1, Exam2...</span>
               </>
             )}
           </div>
-          <input type="file" className="hidden" onChange={onFile} accept=".csv" disabled={loading} />
+          <input type="file" className="hidden" onChange={onFile} accept=".xls" disabled={loading} />
         </label>
       )}
     </div>
