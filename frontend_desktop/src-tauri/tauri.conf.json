@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "frontend_desktop",
+  "productName": "pna_desktop",
   "version": "0.1.0",
   "identifier": "com.void.pna-desktop",
   "build": {
