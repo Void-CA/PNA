@@ -4,6 +4,7 @@ import {
     Users,
     FileSpreadsheet,
     Menu,
+    MessageCircleQuestionMark,
     GraduationCap
 } from 'lucide-react';
 import { Button } from '../ui/button';
@@ -21,6 +22,7 @@ const NAV_ITEMS = [
     { id: 'overview', label: 'Resumen Clase', icon: LayoutDashboard },
     { id: 'students', label: 'Estudiantes', icon: Users },
     { id: 'evaluations', label: 'Evaluaciones', icon: FileSpreadsheet },
+    { id: 'help', label: 'Ayuda', icon: MessageCircleQuestionMark }
 ];
 
 export function DashboardLayout({

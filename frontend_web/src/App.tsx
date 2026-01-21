@@ -4,6 +4,7 @@ import { DashboardLayout } from './components/layout/DashboardLayout';
 import { ClassDashboard } from './components/views/ClassDashboard';
 import { StudentDirectory } from './components/views/StudentDirectory';
 import { EvaluationAnalytics } from './components/views/EvaluationAnalytics';
+import { HelpSection } from './components/views/HelpSection';
 import WelcomeScreen from './components/WelcomeScreen';
 
 const App = () => {
@@ -36,6 +37,8 @@ const App = () => {
         return <StudentDirectory data={data} />;
       case 'evaluations':
         return <EvaluationAnalytics data={data} />;
+      case 'help':
+        return <HelpSection />;
       default:
         return <ClassDashboard data={data} />;
     }
