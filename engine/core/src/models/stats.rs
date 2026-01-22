@@ -59,67 +59,75 @@ impl<'a> GradeStats<'a> {
         }
     }
 
-    // Necesitas saber cuántos puntos faltan por evaluar en el curso
     pub fn academic_status(&self, student_idx: usize) -> AcademicStatus {
+        const TOTAL_COURSE_POINTS: f32 = 100.0;
+        const PASSING_SCORE: f32 = 70.0; // Ajusta según tu reglamento
+
+        // 1. Obtener nota acumulada actual (lo que ya tiene en la bolsa)
+        // Asumimos que calculate_total_score suma los numeradores
         let current_score = match self.student_scores[student_idx] {
             Some(s) => s,
-            None => return AcademicStatus::Failed,
+            None => 0.0, // Si es None, tratamos como 0 para cálculos
         };
 
-        const TOTAL_COURSE_POINTS: f32 = 100.0; 
-        const PASSING_SCORE: f32 = 70.0;
-        
-        // 1. Si ya pasó, no hay más análisis
+        // 2. Si ya cruzó la meta, Aprobado directo.
         if current_score >= PASSING_SCORE {
             return AcademicStatus::Approved;
         }
 
-        // Asumimos que total_course_points es el total del semestre (ej. 100)
-        // Podrías pasar 'remaining_points' directamente si tu sistema ya lo calcula
-        let current_evaluated_points = self.calculate_evaluated_points(); // Función hipotética
-        let remaining_points = TOTAL_COURSE_POINTS - current_evaluated_points;
+        // 3. Calcular "Puntos Perdidos" (La clave de la solución)
+        // Iteramos sobre las tareas YA evaluadas y vemos cuántos puntos dejó ir.
+        let lost_points = self.calculate_lost_points(student_idx);
 
-        // 2. Escenario: Matemáticamente reprobado
-        // Si lo que tiene + todo lo que falta no llega a 60
-        if current_score + remaining_points < PASSING_SCORE {
+        // 4. Calcular el "Techo Máximo" (Max Possible Score)
+        // Si el curso vale 100 y perdió 10, lo máximo que puede sacar es 90.
+        let max_possible_score = TOTAL_COURSE_POINTS - lost_points;
+
+        // 5. Escenario: Matemáticamente Reprobado
+        // Si su techo máximo es menor que la nota de pase (ej: Max 65 < 70)
+        if max_possible_score < PASSING_SCORE {
             return AcademicStatus::Failed;
         }
 
-        // 3. Análisis de Proyección (Lo interesante para el docente)
-        let points_needed = PASSING_SCORE - current_score;
+        // 6. Análisis de Proyección (Pressure)
+        // ¿Cuántos puntos le faltan para llegar al 70?
+        let points_needed_to_pass = PASSING_SCORE - current_score;
         
-        // Evitamos división por cero si remaining_points es 0 (aunque el check de Failed arriba lo cubriría)
-        if remaining_points <= 0.0 {
-            return AcademicStatus::Failed; 
+        // ¿Cuántos puntos quedan TODAVÍA en la mesa de juego?
+        // Esto es: Su techo máximo - lo que ya tiene ganado.
+        let points_remaining_in_game = max_possible_score - current_score;
+
+        // Seguridad contra división por cero
+        if points_remaining_in_game <= 0.0 {
+            return AcademicStatus::Failed;
         }
 
-        let required_performance = points_needed / remaining_points;
+        let pressure = points_needed_to_pass / points_remaining_in_game;
 
-        // Clasificamos según qué tan difícil es lo que le queda
-        match required_performance {
-            p if p <= 0.40 => AcademicStatus::OnTrack,  // Necesita menos del 40% de lo que falta
-            p if p <= 0.70 => AcademicStatus::Warning,  // Necesita entre 40% y 70%
-            _ => AcademicStatus::Critical,              // Necesita más del 70% (difícil)
+        match pressure {
+            p if p <= 0.70 => AcademicStatus::OnTrack,  // Necesita < 40% de efectividad
+            p if p <= 0.90 => AcademicStatus::Warning,  // Necesita esforzarse
+            _ => AcademicStatus::Critical,              // Necesita un milagro (>75% efectividad)
         }
     }
-    
-    // Helper simple
-    fn calculate_evaluated_points(&self) -> f32 {
-        let mut total = 0.0;
-        for eval_idx in 0..self.table.evaluations.len() {
-            // Intentamos descubrir el puntaje máximo posible de cualquier evaluación
-            for record in &self.table.records {
-                if let Some(grade_value) = record.grades.get(eval_idx) {
-                    if let GradeValue::Fraction { total: eval_total, .. } = grade_value {
-                        total += *eval_total;
-                        break; // Solo necesitamos uno para saber el total de esa evaluación
-                    }
+
+    // --- NUEVA FUNCIÓN AUXILIAR ---
+    fn calculate_lost_points(&self, student_idx: usize) -> f32 {
+        let mut lost = 0.0;
+        
+        // Iteramos sobre las calificaciones del alumno
+        for (eval_idx, grade) in self.table.records[student_idx].grades.iter().enumerate() {
+            if let GradeValue::Fraction { obtained, total } = grade {
+                if *total > 0.0 {
+                    lost += total - obtained;
                 }
             }
+            // Si es None o es una nota vacía, NO ha perdido puntos.
+            // Asumimos que todavía puede sacar el 100% de esos puntos futuros.
         }
-        total
+        lost
     }
-        
+
     pub fn student_summaries(&self) -> Vec<StudentSummary> {
         self.table.records.iter().enumerate().map(|(i, record)| {
             StudentSummary {
@@ -371,4 +379,51 @@ fn compute_evaluation_std(table: &AcademicTable, avgs: &[Option<f32>]) -> Vec<Op
             None => None,
         }
     }).collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use std::fs;
+    use super::*; 
+
+    // Tu función de setup que carga el Excel real
+    fn setup() -> Vec<StudentSummary> {
+        // Asegúrate que la ruta sea correcta desde donde ejecutas 'cargo test'
+        let data = fs::read("./data/Notas_II.xls").expect("No se pudo leer el archivo Excel");
+        let (_description_headers, table) = crate::api::parse_excel(&data).expect("Error parseando Excel");
+        
+        // Asumiendo que tu conversión y stats funcionan así:
+        let academic = AcademicTable::try_from(table).expect("Error convirtiendo a AcademicTable");
+        let stats = GradeStats::new(&academic);
+        
+        // Esto debería devolver los summaries con el status ya calculado
+        stats.student_summaries() 
+    }
+
+
+    // --- NUEVO TEST DE INTEGRACIÓN (Datos Reales) ---
+
+    #[test]
+    fn debug_print_real_excel_data() {
+        let students = setup();
+
+        println!("\n========================================");
+        println!(" REPORTE DE ESTADO - DATOS REALES EXCEL ");
+        println!("========================================");
+        println!("{:<30} | {:<10} | {:<15}", "Nombre", "Nota Actual", "Estado Calculado");
+        println!("{:-<30} | {:-<10} | {:-<15}", "", "", "");
+
+        for student in students {
+            // Asumo que StudentSummary tiene campos 'name', 'final_score' (o similar) y 'status'
+            // Ajusta los nombres de los campos según tu struct real
+            println!(
+                "{:<30} | {:<10} | {:?}", 
+                student.name, 
+                student.accumulated_score.unwrap_or(0.0),
+                student.status
+            );
+        }
+        println!("========================================\n");
+        
+    }
 }

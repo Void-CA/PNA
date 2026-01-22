@@ -179,26 +179,26 @@ export function HelpSection() {
             </section> 
 
             {/* Sección 3: Consejos de Acción */}
-            <section className="bg-slate-900 text-white rounded-xl p-6 shadow-lg">
-                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <section className="bg-indigo-50 rounded-xl p-6 shadow-lg">
+                <h2 className="text-xl text-grey-800 font-bold mb-4 flex items-center gap-2">
                     ¿Qué hacer con la información?
                 </h2>
                 <div className="grid md:grid-cols-3 gap-6">
                     <div>
-                        <h4 className="font-bold text-blue-100 mb-1">Si la desviación es alta...</h4>
-                        <p className="text-sm text-blue-50 opacity-90">
+                        <h4 className="font-bold text-indigo-900 mb-1">Si la desviación es alta...</h4>
+                        <p className="text-sm text-gray-700 opacity-90">
                             El grupo es muy desigual. Considera dividir la clase en grupos de trabajo mixtos o asignar tareas de refuerzo diferenciadas.
                         </p>
                     </div>
                     <div>
-                        <h4 className="font-bold text-blue-100 mb-1">Si la curva va a la izquierda...</h4>
-                        <p className="text-sm text-blue-50 opacity-90">
+                        <h4 className="font-bold text-indigo-900 mb-1">Si la curva va a la izquierda...</h4>
+                        <p className="text-sm text-gray-700 opacity-90">
                             Muchas notas bajas. Revisar si la evaluación fue demasiado difícil o si un tema clave no se entendió correctamente.
                         </p>
                     </div>
                     <div>
-                        <h4 className="font-bold text-blue-100 mb-1">Estudiantes en Percentil bajo...</h4>
-                        <p className="text-sm text-blue-50 opacity-90">
+                        <h4 className="font-bold text-indigo-900 mb-1">Estudiantes en Percentil bajo...</h4>
+                        <p className="text-sm text-gray-700 opacity-90">
                             Son los estudiantes que se están quedando atrás respecto al ritmo del resto del grupo. Considerar apoyos adicionales
                         </p>
                     </div>
