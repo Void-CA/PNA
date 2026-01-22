@@ -38,6 +38,7 @@ export interface GradeData {
 }
 
 export interface ExtendedAnalysis {
+    description_headers: string[];
     summary: GradeData;
     table: any; // Raw table data
     distributions: {
@@ -84,6 +85,7 @@ export function useGradeData() {
             }));
 
             setData({
+                description_headers: ge.get_description_headers(),
                 summary,
                 table,
                 distributions

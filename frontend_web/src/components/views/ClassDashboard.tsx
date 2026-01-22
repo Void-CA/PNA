@@ -25,11 +25,34 @@ const StatCard = ({ title, value, subtext, icon: Icon, colorClass }: any) => (
 );
 
 export function ClassDashboard({ data }: ClassDashboardProps) {
-    const { summary, distributions } = data;
+    const { summary, distributions, description_headers } = data;
     const { class: metrics } = summary;
+
+    // Extraer nombre de asignatura si existe en description_headers
+    const subjectHeader = description_headers.find(h => h.startsWith('ASIGNATURA:'));
+    const subjectName = subjectHeader ? subjectHeader.replace(/^ASIGNATURA:\s*\[[^\]]*\]\s*-\s*/i, '').replace(/^\[|\]$/g, '') : '';
 
     return (
         <div className="space-y-8">
+            {subjectName && (
+                <div className="mb-4">
+                    <div className="flex items-center gap-3 bg-indigo-50 rounded-xl px-6 py-4 shadow-sm border border-indigo-200">
+                        <h1 className="text-3xl md:text-4xl font-extrabold text-indigo-900 leading-tight tracking-tight drop-shadow-sm">
+                            {subjectName}
+                        </h1>
+                    </div>
+                </div>
+            )}
+            <div className="flex flex-wrap gap-3 items-center mb-3">
+                {description_headers.map((header, idx) => (
+                    <span
+                        key={idx}
+                        className="inline-block bg-slate-100 text-slate-700 font-semibold rounded px-3 py-1 text-sm shadow-sm border border-slate-200"
+                    >
+                        {header}
+                    </span>
+                ))}
+            </div>
             {/* Hero Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatCard
