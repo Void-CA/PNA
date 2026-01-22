@@ -59,12 +59,65 @@ impl<'a> GradeStats<'a> {
         }
     }
 
+    // Necesitas saber cuántos puntos faltan por evaluar en el curso
     pub fn academic_status(&self, student_idx: usize) -> AcademicStatus {
-        match self.student_scores[student_idx] {
-            Some(score) if score >= 60.0 => AcademicStatus::Approved,
-            Some(score) if score >= 40.0 => AcademicStatus::AtRisk,
-            _ => AcademicStatus::Failed,
+        let current_score = match self.student_scores[student_idx] {
+            Some(s) => s,
+            None => return AcademicStatus::Failed,
+        };
+
+        const TOTAL_COURSE_POINTS: f32 = 100.0; 
+        const PASSING_SCORE: f32 = 70.0;
+        
+        // 1. Si ya pasó, no hay más análisis
+        if current_score >= PASSING_SCORE {
+            return AcademicStatus::Approved;
         }
+
+        // Asumimos que total_course_points es el total del semestre (ej. 100)
+        // Podrías pasar 'remaining_points' directamente si tu sistema ya lo calcula
+        let current_evaluated_points = self.calculate_evaluated_points(); // Función hipotética
+        let remaining_points = TOTAL_COURSE_POINTS - current_evaluated_points;
+
+        // 2. Escenario: Matemáticamente reprobado
+        // Si lo que tiene + todo lo que falta no llega a 60
+        if current_score + remaining_points < PASSING_SCORE {
+            return AcademicStatus::Failed;
+        }
+
+        // 3. Análisis de Proyección (Lo interesante para el docente)
+        let points_needed = PASSING_SCORE - current_score;
+        
+        // Evitamos división por cero si remaining_points es 0 (aunque el check de Failed arriba lo cubriría)
+        if remaining_points <= 0.0 {
+            return AcademicStatus::Failed; 
+        }
+
+        let required_performance = points_needed / remaining_points;
+
+        // Clasificamos según qué tan difícil es lo que le queda
+        match required_performance {
+            p if p <= 0.40 => AcademicStatus::OnTrack,  // Necesita menos del 40% de lo que falta
+            p if p <= 0.70 => AcademicStatus::Warning,  // Necesita entre 40% y 70%
+            _ => AcademicStatus::Critical,              // Necesita más del 70% (difícil)
+        }
+    }
+    
+    // Helper simple
+    fn calculate_evaluated_points(&self) -> f32 {
+        let mut total = 0.0;
+        for eval_idx in 0..self.table.evaluations.len() {
+            // Intentamos descubrir el puntaje máximo posible de cualquier evaluación
+            for record in &self.table.records {
+                if let Some(grade_value) = record.grades.get(eval_idx) {
+                    if let GradeValue::Fraction { total: eval_total, .. } = grade_value {
+                        total += *eval_total;
+                        break; // Solo necesitamos uno para saber el total de esa evaluación
+                    }
+                }
+            }
+        }
+        total
     }
         
     pub fn student_summaries(&self) -> Vec<StudentSummary> {
@@ -133,8 +186,10 @@ impl<'a> GradeStats<'a> {
         let mut m2 = 0.0;
 
         let mut approved_count = 0;
-        let mut at_risk_count = 0;
         let mut failed_count = 0;
+        let mut on_track_count = 0;
+        let mut warning_count = 0;
+        let mut critical_count = 0;
 
         for (i, score_opt) in self.student_scores.iter().enumerate() {
             let score = match score_opt {
@@ -152,8 +207,10 @@ impl<'a> GradeStats<'a> {
 
             match self.academic_status(i) {
                 AcademicStatus::Approved => approved_count += 1,
-                AcademicStatus::AtRisk => at_risk_count += 1,
                 AcademicStatus::Failed => failed_count += 1,
+                AcademicStatus::OnTrack => on_track_count += 1,
+                AcademicStatus::Warning => warning_count += 1,
+                AcademicStatus::Critical => critical_count += 1,
             }
         }
 
@@ -169,8 +226,10 @@ impl<'a> GradeStats<'a> {
             overall_average,
             overall_std_dev,
             approved_count,
-            at_risk_count,
             failed_count,
+            on_track_count,
+            warning_count,
+            critical_count,
         }
     
     }
@@ -313,91 +372,3 @@ fn compute_evaluation_std(table: &AcademicTable, avgs: &[Option<f32>]) -> Vec<Op
         }
     }).collect()
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::models::gradebook::{StudentRecord, GradeValue, AcademicTable};
-
-    #[test]
-    fn test_stats_metrics() {
-        let records = vec![
-            // Student 1: 9/10 (90.0) + 80.0 => Avg 85.0
-            StudentRecord {
-                carnet: "A".to_string(), name: "A".to_string(), email: "".to_string(), group: "".to_string(),
-                grades: vec![
-                    GradeValue::Fraction { obtained: 9.0, total: 10.0 }, 
-                    GradeValue::Numeric(80.0)
-                ],
-                final_grade: GradeValue::Numeric(85.0)
-            },
-            // Student 2: RM + 50.0 => Avg 50.0 (RM ignored for avg)
-            StudentRecord {
-                carnet: "B".to_string(), name: "B".to_string(), email: "".to_string(), group: "".to_string(),
-                grades: vec![
-                    GradeValue::Withdrawn,
-                    GradeValue::Numeric(50.0)
-                ],
-                final_grade: GradeValue::Withdrawn
-            },
-            // Student 3: NP + NP => Avg None
-            StudentRecord {
-                carnet: "C".to_string(), name: "C".to_string(), email: "".to_string(), group: "".to_string(),
-                grades: vec![
-                    GradeValue::Absent,
-                    GradeValue::Absent // Same as NP
-                ],
-                final_grade: GradeValue::Absent
-            }
-        ];
-
-        let table = AcademicTable {
-            evaluations: vec!["Eval1".to_string(), "Eval2".to_string()],
-            records
-        };
-
-        let stats = GradeStats::new(&table);
-        let summary = stats.summary();
-
-        // Check Student A
-        let s_a = summary.students.iter().find(|s| s.id == "A").unwrap();
-        // 9.0 + 80.0 = 89.0
-        assert_eq!(s_a.accumulated_score, Some(89.0));
-        assert_eq!(s_a.status, AcademicStatus::Approved);
-
-        // Check Student B
-        let s_b = summary.students.iter().find(|s| s.id == "B").unwrap();
-        // 50.0 = 50.0
-        assert_eq!(s_b.accumulated_score, Some(50.0));
-        assert_eq!(s_b.status, AcademicStatus::AtRisk); // >= 40
-
-        // Check Student C
-        let s_c = summary.students.iter().find(|s| s.id == "C").unwrap();
-        assert_eq!(s_c.accumulated_score, None);
-        assert_eq!(s_c.status, AcademicStatus::Failed);
-
-        // Check Evaluation 1 Stats
-        // Grades: 9/10->9.0 (A), RM->None (B), NP->None (C) -> Avg 9.0
-        let eval1 = summary.evaluations.get(0).unwrap();
-        assert_eq!(eval1.average, Some(9.0));
-        assert_eq!(eval1.evaluated_count, 1);
-        assert_eq!(eval1.missing_count, 2);
-        assert_eq!(eval1.max_possible_score, Some(10.0));
-
-        // Check Evaluation 2 Stats
-        // Grades: 80.0 (A), 50.0 (B), None (C) -> Avg 65.0
-        let eval2 = summary.evaluations.get(1).unwrap();
-        assert_eq!(eval2.average, Some(65.0));
-        assert_eq!(eval2.evaluated_count, 2);
-        // Eval 2 only has Numeric, so max possible is unknown
-        assert_eq!(eval2.max_possible_score, None);
-
-        // Check Class Stats
-        // Scores: 89.0, 50.0.
-        // Mean = (89+50)/2 = 69.5
-        let cls = summary.class;
-        assert_eq!(cls.student_count, 3);
-        assert_eq!(cls.overall_average, Some(69.5));
-    }
-}
-

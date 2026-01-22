@@ -36,9 +36,11 @@ pub struct ClassSummary {
     pub overall_std_dev: Option<f32>,
 
     pub approved_count: usize,
-    pub at_risk_count: usize,
     pub failed_count: usize,
-}
+    pub on_track_count: usize,
+    pub warning_count: usize,
+    pub critical_count: usize,
+}   
 
 
 #[derive(Serialize, Deserialize, Debug)]
