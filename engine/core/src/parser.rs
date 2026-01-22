@@ -2,7 +2,7 @@ use calamine::{Reader, Sheets, open_workbook_auto_from_rs, DataType};
 use std::io::Cursor;
 use crate::{error::EngineError, models::raw::RawTable};
 
-pub fn parse_excel(data: &[u8]) -> Result<RawTable, EngineError> {
+pub fn parse_excel(data: &[u8]) -> Result<(Vec<String>, RawTable), EngineError> {
     if data.is_empty() {
         return Err(EngineError::EmptyInput);
     }
@@ -31,9 +31,20 @@ pub fn parse_excel(data: &[u8]) -> Result<RawTable, EngineError> {
     };
 
     let mut header_row_index: Option<usize> = None;
+    let mut description_headers: Vec<String> = Vec::new();
 
     // 1. Localizar encabezados (Buscamos "CARNET" en la segunda columna)
     for (i, row) in range.rows().enumerate() {
+        if [0, 1, 2].contains(&i) {
+            // Guardar posibles filas de descripción
+            let desc: Vec<String> = row.iter()
+                .map(|cell| cell.to_string().trim().to_string())
+                .filter(|h| !h.is_empty())
+                .collect();
+            if !desc.is_empty() {
+                description_headers.push(desc.join(" | "));
+            }
+        }
         if row.get(1).map(|c| c.to_string().to_uppercase()) == Some("CARNET".to_string()) {
             header_row_index = Some(i);
             table.headers = row.iter()
@@ -63,8 +74,9 @@ pub fn parse_excel(data: &[u8]) -> Result<RawTable, EngineError> {
         table.rows.push(row_data);
     }
 
-    Ok(table)
+    Ok((description_headers, table))
 }
+
 
 #[cfg(test)]
 mod tests {
@@ -72,9 +84,10 @@ mod tests {
     use std::fs;
     #[test]
     fn test_parse_excel() {
-        let data = fs::read("./data/Notas.xls").expect("Failed to read test Excel file");
-        let table = parse_excel(&data).expect("Failed to parse Excel data");    
+        let data = fs::read("./data/Notas_II.xls").expect("Failed to read test Excel file");
+        let (description_headers, table) = parse_excel(&data).expect("Failed to parse Excel data");    
 
+        println!("Description Headers: {:?}", description_headers); 
         println!("Headers: {:?}", table.headers);
         for row in table.rows.iter().take(5) {
             println!("Row: {:?}", row);

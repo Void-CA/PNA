@@ -44,7 +44,7 @@ impl TryFrom<RawTable> for AcademicTable {
             for (i, header) in raw.headers.iter().enumerate().take(raw.headers.len() - 1).skip(4) {
                 let h_upper = header.trim().to_uppercase();
                 // Filter out summary columns
-                if !h_upper.starts_with("ACU[") && !h_upper.starts_with("CEC[") && !h_upper.starts_with("EXA[") {
+                if !h_upper.starts_with("ACU[") && !h_upper.starts_with("CEC[") && !h_upper.starts_with("EXA[") && !h_upper.starts_with("NP") {
                     valid_indices.push(i);
                     eval_headers.push(header.clone());
                 }

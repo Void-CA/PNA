@@ -3,6 +3,7 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub struct GradeEngine {
+    description_headers: Vec<String>,
     table: AcademicTable,
     stats: GradeStatsOwned,
 }
@@ -11,7 +12,7 @@ pub struct GradeEngine {
 impl GradeEngine {
     #[wasm_bindgen(constructor)]
     pub fn new(csv_data: &[u8]) -> Result<GradeEngine, JsValue> {
-        let raw = parse_excel(csv_data)
+        let (description_headers, raw) = parse_excel(csv_data)
             .map_err(|e| JsValue::from_str(&e.to_string()))?;
 
         let table = AcademicTable::try_from(raw)
@@ -19,7 +20,7 @@ impl GradeEngine {
 
         let stats = GradeStatsOwned::from(&table);
 
-        Ok(Self { table, stats })
+        Ok(Self { description_headers, table, stats })
     }
 
     pub fn get_summary(&self) -> Result<JsValue, JsValue> {
@@ -29,6 +30,11 @@ impl GradeEngine {
 
     pub fn get_table(&self) -> Result<JsValue, JsValue> {
         serde_wasm_bindgen::to_value(&self.table)
+            .map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
+    pub fn get_description_headers(&self) -> Result<JsValue, JsValue> {
+        serde_wasm_bindgen::to_value(&self.description_headers)
             .map_err(|e| JsValue::from_str(&e.to_string()))
     }
 }
