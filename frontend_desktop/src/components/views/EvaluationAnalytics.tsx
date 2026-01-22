@@ -81,7 +81,7 @@ export function EvaluationAnalytics({ data }: EvaluationAnalyticsProps) {
             {/* Main Distribution Chart */}
             <Card>
                 <CardHeader>
-                    <CardTitle>Rendimiento del Aula</CardTitle>
+                    <CardTitle>Rendimiento Porcentual en las Evaluaciones</CardTitle>
                     <CardDescription>Comparativa de distribuciones por evaluación (Min, Q1, Mediana, Q3, Max)</CardDescription>
                 </CardHeader>
                 <CardContent className="h-96">

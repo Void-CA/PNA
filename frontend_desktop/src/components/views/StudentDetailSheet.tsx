@@ -66,12 +66,19 @@ export function StudentDetailSheet({
                             <Badge
                                 variant={
                                     student.status === 'Approved' ? 'success' :
-                                        student.status === 'AtRisk' ? 'warning' : 'destructive'
+                                        student.status === 'Failed' ? 'default' :
+                                        student.status === 'OnTrack' ? 'info' :
+                                        student.status === 'Warning' ? 'warning' :
+                                        student.status === 'Critical' ? 'destructive' :
+                                        'default'
                                 }
                                 className="px-3 py-1 text-xs uppercase tracking-wide"
                             >
-                                {student.status === 'Approved' ? 'Aprobado' :
-                                    student.status === 'AtRisk' ? 'En Riesgo' : 'Fallido'}
+                                {student.status === 'Approved' && 'Aprobado'}
+                                        {student.status === 'Failed' && 'Reprobado'}
+                                        {student.status === 'OnTrack' && 'Bueno'}
+                                        {student.status === 'Warning' && 'Advertencia'}
+                                        {student.status === 'Critical' && 'Crítico'}
                             </Badge>
                         </div>
                     </SheetHeader>
@@ -122,7 +129,7 @@ export function StudentDetailSheet({
                                 </Card>
 
                                 {/* Auto-generated Insight */}
-                                {student.accumulated_score < 60 && (
+                                {student.status === 'Critical' && (
                                     <div className="bg-rose-50 border border-rose-100 rounded-lg p-4 flex gap-3 text-sm text-rose-800">
                                         <AlertCircle className="shrink-0" size={20} />
                                         <p>Este estudiante tiene un rendimiento inferior al crítico. Se recomienda intervención académica inmediata.</p>

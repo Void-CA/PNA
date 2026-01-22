@@ -116,7 +116,7 @@ export function StudentDirectory({ data }: StudentDirectoryProps) {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[100px] cursor-pointer hover:bg-slate-50" onClick={() => handleSort('id')}>
+                            <TableHead className="w-25 cursor-pointer hover:bg-slate-50" onClick={() => handleSort('id')}>
                                 <div className="flex items-center gap-1">
                                     ID <ArrowUpDown size={12} />
                                 </div>
@@ -157,10 +157,17 @@ export function StudentDirectory({ data }: StudentDirectoryProps) {
                                 <TableCell className="text-right">
                                     <Badge variant={
                                         student.status === 'Approved' ? 'success' :
-                                            student.status === 'AtRisk' ? 'warning' : 'destructive'
+                                        student.status === 'Failed' ? 'default' :
+                                        student.status === 'OnTrack' ? 'info' :
+                                        student.status === 'Warning' ? 'warning' :
+                                        student.status === 'Critical' ? 'destructive' :
+                                        'default'
                                     }>
-                                        {student.status === 'Approved' ? 'Aprobado' :
-                                            student.status === 'AtRisk' ? 'En Riesgo' : 'Fallido'}
+                                        {student.status === 'Approved' && 'Aprobado'}
+                                        {student.status === 'Failed' && 'Reprobado'}
+                                        {student.status === 'OnTrack' && 'Bueno'}
+                                        {student.status === 'Warning' && 'Advertencia'}
+                                        {student.status === 'Critical' && 'Crítico'}
                                     </Badge>
                                 </TableCell>
                             </TableRow>

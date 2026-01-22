@@ -9,8 +9,20 @@ interface BoxPlotProps {
 }
 
 export default function PerformanceBoxPlot({ data }: BoxPlotProps) {
+    // 0. Normalizar los datos en porcentajes
+    const normalizedData = useMemo(() => {
+        return data.map(group => {
+            const maxVal = Math.max(...group.values, 1); // Evitar división por cero
+            const normalizedValues = group.values.map(v => (v / maxVal) * 100);
+            return {
+                name: group.name,
+                values: normalizedValues
+            };
+        });
+    }, [data]);
+
     // 1. Memorizar Traces: Evita que Plotly recree el gráfico si los datos no han cambiado
-    const traces = useMemo(() => data.map((group) => ({
+    const traces = useMemo(() => normalizedData.map((group) => ({
         type: 'box' as const,
         y: group.values,
         name: group.name,
@@ -26,7 +38,7 @@ export default function PerformanceBoxPlot({ data }: BoxPlotProps) {
         margin: { t: 20, r: 30, l: 40, b: 40 },
         yaxis: { 
             // CAMBIO: De string a objeto
-            title: { text: 'Value' }, 
+            title: { text: 'Porcentaje de Nota (%)' }, 
             automargin: true 
         },
         xaxis: { 
