@@ -131,6 +131,11 @@ export function StudentDirectory({ data }: StudentDirectoryProps) {
                                     Puntaje <ArrowUpDown size={12} />
                                 </div>
                             </TableHead>
+                            <TableHead className="text-right cursor-pointer hover:bg-slate-50" onClick={() => handleSort('lost_points')}>
+                                <div className="flex items-center gap-1 justify-end">
+                                    Puntos Perdidos <ArrowUpDown size={12} />
+                                </div>
+                            </TableHead>
                             <TableHead className="cursor-pointer hover:bg-slate-50" onClick={() => handleSort('percentile')}>
                                 <div className="flex items-center gap-1">
                                     Percentil <ArrowUpDown size={12} />
@@ -141,6 +146,7 @@ export function StudentDirectory({ data }: StudentDirectoryProps) {
                                     Estado <ArrowUpDown size={12} />
                                 </div>
                             </TableHead>
+                            
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -153,6 +159,7 @@ export function StudentDirectory({ data }: StudentDirectoryProps) {
                                 <TableCell className="font-mono text-xs text-slate-500">{student.id}</TableCell>
                                 <TableCell className="font-medium">{student.name}</TableCell>
                                 <TableCell>{student.accumulated_score}</TableCell>
+                                <TableCell className="text-center">{student.lost_points}</TableCell>
                                 <TableCell>{student.percentile.toFixed(2)}%</TableCell>
                                 <TableCell className="text-right">
                                     <Badge variant={

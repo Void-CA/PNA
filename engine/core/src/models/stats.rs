@@ -10,6 +10,7 @@ pub struct GradeStats<'a> {
     student_scores: Vec<Option<f32>>,
     student_std: Vec<Option<f32>>,
     student_percentiles: Vec<Option<f32>>,
+    student_lost_points : Vec<Option<f32>>,
 
     evaluation_averages: Vec<Option<f32>>,
     evaluation_std: Vec<Option<f32>>,
@@ -48,12 +49,13 @@ impl<'a> GradeStats<'a> {
 
         let evaluation_averages = compute_evaluation_averages(table);
         let evaluation_std = compute_evaluation_std(table, &evaluation_averages);
-
+        let student_lost_points = compute_student_lost_points(table);
         Self {
             table,
             student_scores,
             student_std,
             student_percentiles,
+            student_lost_points,
             evaluation_averages,
             evaluation_std,
         }
@@ -116,7 +118,7 @@ impl<'a> GradeStats<'a> {
         let mut lost = 0.0;
         
         // Iteramos sobre las calificaciones del alumno
-        for (eval_idx, grade) in self.table.records[student_idx].grades.iter().enumerate() {
+        for (_eval_idx, grade) in self.table.records[student_idx].grades.iter().enumerate() {
             if let GradeValue::Fraction { obtained, total } = grade {
                 if *total > 0.0 {
                     lost += total - obtained;
@@ -134,6 +136,7 @@ impl<'a> GradeStats<'a> {
                 id: record.carnet.clone(),
                 name: record.name.clone(),
                 accumulated_score: self.student_scores[i],
+                lost_points: self.student_lost_points[i],
                 percentile: self.student_percentiles[i],
                 std_dev: self.student_std[i],
                 status: self.academic_status(i),
@@ -231,6 +234,10 @@ impl<'a> GradeStats<'a> {
 
         ClassSummary {
             student_count: self.table.records.len(),
+            acumulated_points: self.evaluation_summaries().iter()
+                .filter_map(|eval| eval.max_possible_score)
+                .sum::<f32>()
+                .into(),
             overall_average,
             overall_std_dev,
             approved_count,
@@ -378,6 +385,24 @@ fn compute_evaluation_std(table: &AcademicTable, avgs: &[Option<f32>]) -> Vec<Op
             },
             None => None,
         }
+    }).collect()
+}
+
+fn compute_student_lost_points(table: &AcademicTable) -> Vec<Option<f32>> {
+    table.records.iter().map(|record| {
+        let mut lost = 0.0;
+        let mut has_data = false;
+
+        for grade in &record.grades {
+            if let GradeValue::Fraction { obtained, total } = grade {
+                if *total > 0.0 {
+                    lost += total - obtained;
+                    has_data = true;
+                }
+            }
+        }
+
+        if has_data { Some(lost) } else { None }
     }).collect()
 }
 

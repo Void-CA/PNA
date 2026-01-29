@@ -81,7 +81,6 @@ impl TryFrom<RawTable> for AcademicTable {
             }
 
             let final_grade = parse_cell(row.last().unwrap_or(&None));
-
             records.push(StudentRecord {
                 carnet,
                 name,

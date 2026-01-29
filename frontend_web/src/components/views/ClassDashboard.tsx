@@ -78,13 +78,12 @@ export function ClassDashboard({ data }: ClassDashboardProps) {
                     colorClass="text-blue-600"
                 />
                 <StatCard
-                    title="Tasa Aprobación"
-                    value={`${((metrics.approved_count / metrics.student_count) * 100).toFixed(0)}%`}
-                    subtext={`${metrics.approved_count} aprobados`}
+                    title="Total Acumulado"
+                    value={metrics.acumulated_points?.toFixed(0) || "N/A"}
+                    subtext="Puntos acumulados por la clase"
                     icon={CheckCircle2}
                     colorClass="text-emerald-600"
                 />
-                
                 <StatCard
                     title="Reprobados"
                     value={metrics.failed_count}

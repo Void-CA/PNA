@@ -7,6 +7,7 @@ pub struct StudentSummary {
     pub id : String,
     pub name: String,
     pub accumulated_score: Option<f32>,
+    pub lost_points: Option<f32>,
     pub percentile: Option<f32>,
     pub std_dev: Option<f32>,
     pub status: AcademicStatus,
@@ -32,6 +33,7 @@ pub struct EvaluationSummary {
 pub struct ClassSummary {
     pub student_count: usize,
 
+    pub acumulated_points: Option<f32>,
     pub overall_average: Option<f32>,
     pub overall_std_dev: Option<f32>,
 

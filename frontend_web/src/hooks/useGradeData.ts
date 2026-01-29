@@ -5,6 +5,7 @@ export interface Student {
     id: string;
     name: string;
     accumulated_score: number;
+    lost_points: number;
     percentile: number;
     std_dev: number;
     status: 'Approved' | 'Failed' | 'OnTrack' | 'Warning' | 'Critical';
@@ -24,6 +25,7 @@ export interface Evaluation {
 
 export interface ClassSummary {
     student_count: number;
+    acumulated_points: number;
     overall_average: number;
     overall_std_dev: number;
     approved_count: number;
