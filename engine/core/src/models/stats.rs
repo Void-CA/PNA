@@ -240,6 +240,7 @@ impl<'a> GradeStats<'a> {
                 .into(),
             overall_average,
             overall_std_dev,
+            evaluation_count: self.table.evaluations.len(),
             approved_count,
             failed_count,
             on_track_count,

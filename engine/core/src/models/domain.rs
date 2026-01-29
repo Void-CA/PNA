@@ -37,6 +37,7 @@ pub struct ClassSummary {
     pub overall_average: Option<f32>,
     pub overall_std_dev: Option<f32>,
 
+    pub evaluation_count: usize,
     pub approved_count: usize,
     pub failed_count: usize,
     pub on_track_count: usize,

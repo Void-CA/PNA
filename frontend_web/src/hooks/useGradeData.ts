@@ -28,6 +28,7 @@ export interface ClassSummary {
     acumulated_points: number;
     overall_average: number;
     overall_std_dev: number;
+    evaluation_count: number;
     approved_count: number;
     warning_count: number;
     on_track_count: number;
