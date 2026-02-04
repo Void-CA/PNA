@@ -52,7 +52,7 @@ const App = () => {
     >
       {renderView()}
       <div className="fixed bottom-1 right-1 text-[10px] text-slate-300 pointer-events-none">
-        v1.0.1 - Fix Applied
+        v0.2.0 - Feb 2026
       </div>
     </DashboardLayout>
   );
