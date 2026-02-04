@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
-import { CheckCircle2, TrendingUp, Users } from 'lucide-react';
+import { CheckCircle2, ClipboardList, TrendingUp, Users } from 'lucide-react';
 import GradeDistributionChart from '../charts/GradeDistributionChart';
 import StatusBarChart from '../charts/StatusBarChart';
 import type { ExtendedAnalysis } from '../../hooks/useGradeData';
@@ -64,6 +64,20 @@ export function ClassDashboard({ data }: ClassDashboardProps) {
                     colorClass="text-indigo-600"
                 />
                 <StatCard
+                    title="Total Acumulado"
+                    value={metrics.acumulated_points?.toFixed(0) || "N/A"}
+                    subtext="Puntos acumulados"
+                    icon={CheckCircle2}
+                    colorClass="text-emerald-600"
+                />
+                <StatCard
+                    title="Evaluaciones Aplicadas"
+                    value={metrics.evaluation_count}
+                    subtext="Total evaluaciones aplicadas"
+                    icon={ClipboardList}
+                    colorClass="text-teal-800"
+                />
+                <StatCard
                     title="Desviación Estándar"
                     value={metrics.overall_std_dev?.toFixed(2) || "N/A"}
                     subtext="Variabilidad de notas"
@@ -77,21 +91,7 @@ export function ClassDashboard({ data }: ClassDashboardProps) {
                     icon={Users}
                     colorClass="text-blue-600"
                 />
-                <StatCard
-                    title="Tasa Aprobación"
-                    value={`${((metrics.approved_count / metrics.student_count) * 100).toFixed(0)}%`}
-                    subtext={`${metrics.approved_count} aprobados`}
-                    icon={CheckCircle2}
-                    colorClass="text-emerald-600"
-                />
                 
-                <StatCard
-                    title="Reprobados"
-                    value={metrics.failed_count}
-                    subtext="Total reprobados"
-                    icon={Users}
-                    colorClass="text-rose-600"
-                />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-7 gap-8">
@@ -104,7 +104,7 @@ export function ClassDashboard({ data }: ClassDashboardProps) {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="pl-0">
-                        <div className="h-[300px] w-full mt-4">
+                        <div className="h-75 w-full mt-4">
                             <GradeDistributionChart data={distributions} />
                         </div>
                     </CardContent>
@@ -119,7 +119,7 @@ export function ClassDashboard({ data }: ClassDashboardProps) {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="pl-0">
-                        <div className="h-[300px] w-full mt-4">
+                        <div className="h-75 w-full mt-4">
                             <StatusBarChart
                                 data={[
                                     { name: 'Crítico', value: metrics.critical_count, color: '#f43f5e' },

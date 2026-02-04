@@ -64,20 +64,6 @@ export function ClassDashboard({ data }: ClassDashboardProps) {
                     colorClass="text-indigo-600"
                 />
                 <StatCard
-                    title="Desviación Estándar"
-                    value={metrics.overall_std_dev?.toFixed(2) || "N/A"}
-                    subtext="Variabilidad de notas"
-                    icon={TrendingUp}
-                    colorClass="text-yellow-500"
-                />
-                <StatCard
-                    title="Estudiantes"
-                    value={metrics.student_count}
-                    subtext="Total inscritos"
-                    icon={Users}
-                    colorClass="text-blue-600"
-                />
-                <StatCard
                     title="Total Acumulado"
                     value={metrics.acumulated_points?.toFixed(0) || "N/A"}
                     subtext="Puntos acumulados"
@@ -91,6 +77,21 @@ export function ClassDashboard({ data }: ClassDashboardProps) {
                     icon={ClipboardList}
                     colorClass="text-teal-800"
                 />
+                <StatCard
+                    title="Desviación Estándar"
+                    value={metrics.overall_std_dev?.toFixed(2) || "N/A"}
+                    subtext="Variabilidad de notas"
+                    icon={TrendingUp}
+                    colorClass="text-yellow-500"
+                />
+                <StatCard
+                    title="Estudiantes"
+                    value={metrics.student_count}
+                    subtext="Total inscritos"
+                    icon={Users}
+                    colorClass="text-blue-600"
+                />
+                
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-7 gap-8">
