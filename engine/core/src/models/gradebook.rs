@@ -41,18 +41,31 @@ impl TryFrom<RawTable> for AcademicTable {
         let mut eval_headers = Vec::new();
 
         if raw.headers.len() > 5 {
+            // Check the first row of data for NSP values
+            let first_row = raw.rows.get(0);
             for (i, header) in raw.headers.iter().enumerate().take(raw.headers.len() - 1).skip(4) {
                 let h_upper = header.trim().to_uppercase();
                 // Filter out summary columns
-                if !h_upper.starts_with("ACU[") && !h_upper.starts_with("EXA[") && !h_upper.starts_with("NP") {
-                    valid_indices.push(i);
-                    if h_upper.starts_with("CEC[") {
-                        eval_headers.push("Evaluacion Docente".to_string());
-                        continue;
-                    }
-                    eval_headers.push(header.clone());
+                if h_upper.starts_with("ACU[") || h_upper.starts_with("EXA[") || h_upper.starts_with("NP") {
+                    continue;
                 }
-                
+                // Check if the cell in the first row is NSP (skip if so)
+                let is_nsp = if let Some(row) = first_row {
+                    if i + 1 < row.len() {
+                        if let Some(cell_val) = &row[i + 1] {
+                            cell_val.trim().eq_ignore_ascii_case("NSP")
+                        } else { false }
+                    } else { false }
+                } else { false };
+                if is_nsp {
+                    continue;
+                }
+                valid_indices.push(i);
+                if h_upper.starts_with("CEC["){
+                    eval_headers.push("Evaluacion Docente".to_string());
+                    continue;
+                }
+                eval_headers.push(header.clone());
             }
         }
 
