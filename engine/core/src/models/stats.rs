@@ -146,7 +146,7 @@ impl<'a> GradeStats<'a> {
                 accumulated_score: score_opt,
                 lost_points: self.student_lost_points[i],
                 to_pass_points: score_opt.map(|score| Self::to_pass_points_from_score(score, PASSING_SCORE)),
-                efffort_needed: score_opt.map(|score| Self::effort_needed_from_score(score, PASSING_SCORE, TOTAL_COURSE_POINTS)),
+                effort_needed: score_opt.map(|score| Self::effort_needed_from_score(score, PASSING_SCORE, TOTAL_COURSE_POINTS)),
                 percentile: self.student_percentiles[i],
                 std_dev: self.student_std[i],
                 status: self.academic_status(i),
