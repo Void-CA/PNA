@@ -63,53 +63,58 @@ impl<'a> GradeStats<'a> {
 
     pub fn academic_status(&self, student_idx: usize) -> AcademicStatus {
         const TOTAL_COURSE_POINTS: f32 = 100.0;
-        const PASSING_SCORE: f32 = 70.0; // Ajusta según tu reglamento
+        const PASSING_SCORE: f32 = 70.0;
 
-        // 1. Obtener nota acumulada actual (lo que ya tiene en la bolsa)
-        // Asumimos que calculate_total_score suma los numeradores
         let current_score = match self.student_scores[student_idx] {
             Some(s) => s,
-            None => 0.0, // Si es None, tratamos como 0 para cálculos
+            None => 0.0,
         };
 
-        // 2. Si ya cruzó la meta, Aprobado directo.
         if current_score >= PASSING_SCORE {
             return AcademicStatus::Approved;
         }
 
-        // 3. Calcular "Puntos Perdidos" (La clave de la solución)
-        // Iteramos sobre las tareas YA evaluadas y vemos cuántos puntos dejó ir.
         let lost_points = self.calculate_lost_points(student_idx);
-
-        // 4. Calcular el "Techo Máximo" (Max Possible Score)
-        // Si el curso vale 100 y perdió 10, lo máximo que puede sacar es 90.
         let max_possible_score = TOTAL_COURSE_POINTS - lost_points;
-
-        // 5. Escenario: Matemáticamente Reprobado
-        // Si su techo máximo es menor que la nota de pase (ej: Max 65 < 70)
         if max_possible_score < PASSING_SCORE {
             return AcademicStatus::Failed;
         }
 
-        // 6. Análisis de Proyección (Pressure)
-        // ¿Cuántos puntos le faltan para llegar al 70?
-        let points_needed_to_pass = PASSING_SCORE - current_score;
-        
-        // ¿Cuántos puntos quedan TODAVÍA en la mesa de juego?
-        // Esto es: Su techo máximo - lo que ya tiene ganado.
+        let points_needed = Self::to_pass_points_from_score(current_score, PASSING_SCORE);
         let points_remaining_in_game = max_possible_score - current_score;
-
-        // Seguridad contra división por cero
         if points_remaining_in_game <= 0.0 {
             return AcademicStatus::Failed;
         }
-
-        let pressure = points_needed_to_pass / points_remaining_in_game;
+        let pressure = points_needed / points_remaining_in_game;
 
         match pressure {
-            p if p <= 0.70 => AcademicStatus::OnTrack,  // Necesita < 40% de efectividad
-            p if p <= 0.90 => AcademicStatus::Warning,  // Necesita esforzarse
-            _ => AcademicStatus::Critical,              // Necesita un milagro (>75% efectividad)
+            p if p <= 0.70 => AcademicStatus::OnTrack,
+            p if p <= 0.90 => AcademicStatus::Warning,
+            _ => AcademicStatus::Critical,
+        }
+    }
+
+    /// Calcula los puntos que le faltan para pasar, dado un score y el mínimo de pase
+    fn to_pass_points_from_score(score: f32, passing_score: f32) -> f32 {
+        if score >= passing_score {
+            0.0
+        } else {
+            passing_score - score
+        }
+    }
+
+    /// Calcula el esfuerzo relativo necesario para pasar, dado el score actual, el mínimo de pase y el total del curso
+    fn effort_needed_from_score(score: f32, passing_score: f32, total_course_points: f32) -> f32 {
+        if score >= passing_score {
+            0.0
+        } else {
+            let points_needed = passing_score - score;
+            let points_remaining_in_game = total_course_points - score;
+            if points_remaining_in_game > 0.0 {
+                (points_needed / points_remaining_in_game) * 100.0
+            } else {
+                100.0
+            }
         }
     }
 
@@ -131,12 +136,17 @@ impl<'a> GradeStats<'a> {
     }
 
     pub fn student_summaries(&self) -> Vec<StudentSummary> {
+        const PASSING_SCORE: f32 = 70.0;
+        const TOTAL_COURSE_POINTS: f32 = 100.0;
         self.table.records.iter().enumerate().map(|(i, record)| {
+            let score_opt = self.student_scores[i];
             StudentSummary {
                 id: record.carnet.clone(),
                 name: record.name.clone(),
-                accumulated_score: self.student_scores[i],
+                accumulated_score: score_opt,
                 lost_points: self.student_lost_points[i],
+                to_pass_points: score_opt.map(|score| Self::to_pass_points_from_score(score, PASSING_SCORE)),
+                efffort_needed: score_opt.map(|score| Self::effort_needed_from_score(score, PASSING_SCORE, TOTAL_COURSE_POINTS)),
                 percentile: self.student_percentiles[i],
                 std_dev: self.student_std[i],
                 status: self.academic_status(i),

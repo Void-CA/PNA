@@ -8,6 +8,8 @@ pub struct StudentSummary {
     pub name: String,
     pub accumulated_score: Option<f32>,
     pub lost_points: Option<f32>,
+    pub to_pass_points: Option<f32>,
+    pub efffort_needed: Option<f32>,
     pub percentile: Option<f32>,
     pub std_dev: Option<f32>,
     pub status: AcademicStatus,
