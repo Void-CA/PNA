@@ -110,7 +110,7 @@ impl<'a> GradeStats<'a> {
         } else {
             let points_needed = passing_score - score;
             let points_remaining_in_game = total_course_points - score;
-            if points_remaining_in_game > 0.0 {
+            if points_remaining_in_game > 0.0 && points_needed > 0.0 {
                 (points_needed / points_remaining_in_game) * 100.0
             } else {
                 100.0
