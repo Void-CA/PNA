@@ -104,17 +104,19 @@ impl<'a> GradeStats<'a> {
     }
 
     /// Calcula el esfuerzo relativo necesario para pasar, dado el score actual, el mínimo de pase y el total del curso
-    fn effort_needed_from_score(score: f32, passing_score: f32, total_course_points: f32) -> f32 {
+    fn effort_needed_from_score(score: f32, passing_score: f32, points_remaining: f32) -> f32 {
         if score >= passing_score {
-            0.0
+            return 0.0;
+        }
+
+        let points_needed = passing_score - score;
+
+        if points_remaining > 0.0 {
+            // Si necesita 10 y quedan 20, el esfuerzo es 50%
+            // Si necesita 20 y quedan 10, el esfuerzo es 200% (imposible pasar)
+            (points_needed / points_remaining) * 100.0
         } else {
-            let points_needed = passing_score - score;
-            let points_remaining_in_game = total_course_points - score;
-            if points_remaining_in_game > 0.0 && points_needed > 0.0 {
-                (points_needed / points_remaining_in_game) * 100.0
-            } else {
-                100.0
-            }
+            100.0 
         }
     }
 
@@ -138,15 +140,24 @@ impl<'a> GradeStats<'a> {
     pub fn student_summaries(&self) -> Vec<StudentSummary> {
         const PASSING_SCORE: f32 = 70.0;
         const TOTAL_COURSE_POINTS: f32 = 100.0;
+
         self.table.records.iter().enumerate().map(|(i, record)| {
-            let score_opt = self.student_scores[i];
+            let score = self.student_scores[i].unwrap_or(0.0);
+            let lost_points = self.student_lost_points[i].unwrap_or(0.0);
+            
+            // Puntos que faltan por evaluar + puntos que faltan por sacar en lo que ya se evaluó
+            // Pero lo que nos interesa es: ¿De lo que falta por calificar, cuánto debo sacar?
+            let max_possible = TOTAL_COURSE_POINTS - lost_points;
+            let points_remaining_in_game = max_possible - score;
+
             StudentSummary {
                 id: record.carnet.clone(),
                 name: record.name.clone(),
-                accumulated_score: score_opt,
-                lost_points: self.student_lost_points[i],
-                to_pass_points: score_opt.map(|score| Self::to_pass_points_from_score(score, PASSING_SCORE)),
-                effort_needed: score_opt.map(|score| Self::effort_needed_from_score(score, PASSING_SCORE, TOTAL_COURSE_POINTS)),
+                accumulated_score: Some(score),
+                lost_points: Some(lost_points),
+                to_pass_points: Some(Self::to_pass_points_from_score(score, PASSING_SCORE)),
+                // Usamos la nueva lógica de esfuerzo basada en lo que queda "en juego"
+                effort_needed: Some(Self::effort_needed_from_score(score, PASSING_SCORE, points_remaining_in_game)),
                 percentile: self.student_percentiles[i],
                 std_dev: self.student_std[i],
                 status: self.academic_status(i),
