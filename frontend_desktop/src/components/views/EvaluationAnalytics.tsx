@@ -7,7 +7,7 @@ import { Button } from '../ui/button';
 import { ArrowUpDown, Maximize2 } from 'lucide-react';
 
 import type { ExtendedAnalysis, Evaluation } from '../../hooks/useGradeData';
-import PerformanceBoxPlot from '../charts/PerformanceBoxPlot';
+import PerformanceStackedBar from '../charts/PerformanceStackedBar';
 import { EvaluationDetailSheet } from './EvaluationDetailSheet';
 
 interface EvaluationAnalyticsProps {
@@ -39,12 +39,13 @@ export function EvaluationAnalytics({ data }: EvaluationAnalyticsProps) {
             // Return the raw values array for Plotly to calculate box plot statistics
             return {
                 name: ev.name,
-                values: scores
+                values: scores,
+                maxScore: ev.max_possible_score || 100 // Default to 100 if not specified
             };
         });
 
         // Filter out null values with proper type narrowing
-        return plotData.filter((item): item is { name: string; values: number[] } => item !== null);
+        return plotData.filter((item): item is { name: string; values: number[]; maxScore: number } => item !== null);
     }, [evaluations, data]);
 
     // Sorting logic
@@ -81,13 +82,20 @@ export function EvaluationAnalytics({ data }: EvaluationAnalyticsProps) {
             {/* Main Distribution Chart */}
             <Card>
                 <CardHeader>
-                    <CardTitle>Rendimiento Porcentual en las Evaluaciones</CardTitle>
-                    <CardDescription>Comparativa de distribuciones por evaluación (Min, Q1, Mediana, Q3, Max)</CardDescription>
+                    <CardTitle>
+                        Distribución de Rendimiento por Evaluación
+                    </CardTitle>
+                    <CardDescription>
+                        Proporción de estudiantes en desempeño Alto, Medio y Bajo en cada evaluación.
+                        Se calcula en base al porcentaje del puntaje logrado respecto al máximo posible de cada evaluación.
+                    </CardDescription>
                 </CardHeader>
-                <CardContent className="h-96">
-                    <PerformanceBoxPlot data={boxPlotData} />
+
+                <CardContent className="h-[420px]">
+                    <PerformanceStackedBar data={boxPlotData} />
                 </CardContent>
             </Card>
+
 
             <div className="rounded-md border border-slate-200 bg-white overflow-hidden shadow-sm mt-8">
                 <Table>

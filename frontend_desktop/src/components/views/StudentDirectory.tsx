@@ -93,7 +93,6 @@ export function StudentDirectory({ data }: StudentDirectoryProps) {
                 rowObj[evalName] = scoreVal;
             }
         });
-
         return rowObj;
     };
 
@@ -136,9 +135,14 @@ export function StudentDirectory({ data }: StudentDirectoryProps) {
                                     Puntos Perdidos <ArrowUpDown size={12} />
                                 </div>
                             </TableHead>
-                            <TableHead className="cursor-pointer hover:bg-slate-50" onClick={() => handleSort('percentile')}>
+                            <TableHead className="text-right cursor-pointer hover:bg-slate-50" onClick={() => handleSort('to_pass_points')}>
+                                <div className="flex items-center gap-1 justify-end">
+                                    Puntos para Aprobar <ArrowUpDown size={12} />
+                                </div>
+                            </TableHead>
+                            <TableHead className="cursor-pointer hover:bg-slate-50" onClick={() => handleSort('effort_needed')}>
                                 <div className="flex items-center gap-1">
-                                    Percentil <ArrowUpDown size={12} />
+                                    Esfuerzo requerido<ArrowUpDown size={12} />
                                 </div>
                             </TableHead>
                             <TableHead className="text-right cursor-pointer hover:bg-slate-50" onClick={() => handleSort('status')}>
@@ -160,7 +164,8 @@ export function StudentDirectory({ data }: StudentDirectoryProps) {
                                 <TableCell className="font-medium">{student.name}</TableCell>
                                 <TableCell>{student.accumulated_score}</TableCell>
                                 <TableCell className="text-center">{student.lost_points}</TableCell>
-                                <TableCell>{student.percentile.toFixed(2)}%</TableCell>
+                                <TableCell className="text-center">{student.to_pass_points}</TableCell>
+                                <TableCell>{student.effort_needed.toFixed(2)}%</TableCell>
                                 <TableCell className="text-right">
                                     <Badge variant={
                                         student.status === 'Approved' ? 'success' :

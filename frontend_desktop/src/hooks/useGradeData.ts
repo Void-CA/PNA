@@ -6,6 +6,8 @@ export interface Student {
     name: string;
     accumulated_score: number;
     lost_points: number;
+    to_pass_points: number;
+    effort_needed: number;
     percentile: number;
     std_dev: number;
     status: 'Approved' | 'Failed' | 'OnTrack' | 'Warning' | 'Critical';
